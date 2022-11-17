@@ -26,7 +26,7 @@ public class GCES {
 
     public static final String MOD_ID = "gces";
     public static final String MOD_NAME = "GCES";
-    public static final String VERSION = "10.1.0";
+    public static final String VERSION = "10.5.0";
     public static Logger logger = LogManager.getLogger(MOD_NAME);
     public static BasicConfigManager configManager;
     public static Map<String, Difficulty> difficultyMap = new HashMap<>();
@@ -54,7 +54,6 @@ public class GCES {
             BasicConfigManager bcm = new BasicConfigManager(diffFiles, diffDir, GCES.class, MOD_NAME, MOD_ID, logger);
             bcm.init();
 
-            String alphaPermission = bcm.getConfigNode(0, "Settings", "Alpha-Permission").getString();
             String finalStagePermission = bcm.getConfigNode(0, "Settings", "Evolution-Stage", "Final").getString();
             String firstStagePermission = bcm.getConfigNode(0, "Settings", "Evolution-Stage", "First").getString();
             String middleStagePermission = bcm.getConfigNode(0, "Settings", "Evolution-Stage", "Middle").getString();
@@ -62,7 +61,7 @@ public class GCES {
             String legendaryPermission = bcm.getConfigNode(0, "Settings", "Legendary-Permission").getString();
             String shinyPermission = bcm.getConfigNode(0, "Settings", "Shiny-Permission").getString();
             Map<String, Integer> catchingTierMap = bcm.getConfigNode(0, "Tiers").getValue(new TypeToken<Map<String, Integer>>() {});
-            CatchingModule catchingModule = new CatchingModule(alphaPermission, finalStagePermission, firstStagePermission, middleStagePermission, singleStagePermission, legendaryPermission, shinyPermission, catchingTierMap);
+            CatchingModule catchingModule = new CatchingModule(finalStagePermission, firstStagePermission, middleStagePermission, singleStagePermission, legendaryPermission, shinyPermission, catchingTierMap);
 
             Map<String, Integer> levelingTierMap = bcm.getConfigNode(1, "Tiers").getValue(new TypeToken<Map<String, Integer>>() {});
             LevelingModule levelingModule = new LevelingModule(levelingTierMap);

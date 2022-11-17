@@ -4,7 +4,6 @@ import java.util.Map;
 
 public class CatchingModule {
 
-    private final String alphaPermission;
     private final String finalStagePermission;
     private final String firstStagePermission;
 
@@ -14,10 +13,9 @@ public class CatchingModule {
     private final String shinyPermission;
     private final Map<String, Integer> tierMap;
 
-    public CatchingModule (String alphaPermission, String finalStagePermission, String firstStagePermission, String middleStagePermission, String singleStagePermission,
+    public CatchingModule (String finalStagePermission, String firstStagePermission, String middleStagePermission, String singleStagePermission,
                     String legendaryPermission, String shinyPermission, Map<String, Integer> tierMap) {
 
-        this.alphaPermission = alphaPermission;
         this.finalStagePermission = finalStagePermission;
         this.firstStagePermission = firstStagePermission;
         this.middleStagePermission = middleStagePermission;
@@ -25,12 +23,6 @@ public class CatchingModule {
         this.legendaryPermission = legendaryPermission;
         this.shinyPermission = shinyPermission;
         this.tierMap = tierMap;
-
-    }
-
-    public String getAlphaPermission() {
-
-        return this.alphaPermission;
 
     }
 
