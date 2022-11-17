@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "gces",
+    "name": "GCES",
+    "description": "Restrictive modules for player experience",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "Lypaka"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
