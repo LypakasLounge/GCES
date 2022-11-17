@@ -38,7 +38,7 @@ public class GCES {
 
     public static final String MOD_ID = "gces";
     public static final String MOD_NAME = "GCES";
-    public static final String VERSION = "10.1.0";
+    public static final String VERSION = "10.5.0";
     public static Logger logger = LogManager.getLogger(MOD_NAME);
     public static BasicConfigManager configManager;
     public static Map<String, Difficulty> difficultyMap = new HashMap<>();
@@ -61,23 +61,16 @@ public class GCES {
     public void onServerStarting (FMLServerStartingEvent event) {
 
         event.registerServerCommand(new GCESCommand());
-        if (PixelmonVersionDetector.VERSION.contains("Generations")) {
-
-            maxPokemonLevel = PixelmonConfig.maxLevel;
-
-        } else {
-
-            maxPokemonLevel = com.pixelmonmod.pixelmon.config.PixelmonConfig.maxLevel;
-
-        }
 
         MinecraftForge.EVENT_BUS.register(new LoginListener());
         if (PixelmonVersionDetector.VERSION.contains("Generations")) {
 
+            maxPokemonLevel = PixelmonConfig.maxLevel;
             EventRegistry.registerGenerationsEvents();
 
         } else {
 
+            maxPokemonLevel = com.pixelmonmod.pixelmon.config.PixelmonConfig.maxLevel;
             EventRegistry.registerReforgedEvents();
 
         }
