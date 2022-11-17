@@ -20,7 +20,6 @@ public class ConfigGetters {
     public static String levelingTierMessage;
     public static String megaMessage;
     public static String missingPermissionMessage;
-    public static String zMoveMessage;
 
     public static boolean doAutoSaves;
     public static int autoSaveInterval;
@@ -64,7 +63,6 @@ public class ConfigGetters {
             GCES.configManager.save();
 
         }
-        zMoveMessage = GCES.configManager.getConfigNode(0, "Messages", "Z-Move-Error").getString();
 
         playerAccountsMap = GCES.configManager.getConfigNode(1, "Accounts").getValue(new TypeToken<Map<String, Map<String, String>>>() {});
 

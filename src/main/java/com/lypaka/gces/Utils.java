@@ -1,6 +1,7 @@
 package com.lypaka.gces;
 
-import com.lypaka.lypakautils.PixelmonHandlers.RandomHandler;
+import com.pixelmonmod.pixelmon.api.config.PixelmonConfigProxy;
+import com.pixelmonmod.pixelmon.api.util.helpers.RandomHelper;
 
 public class Utils {
 
@@ -13,7 +14,7 @@ public class Utils {
 
         if (amount.contains("r")) {
 
-            maxAmount = RandomHandler.getRandomNumberBetween(1, Integer.parseInt(amount.replace("r", "")));
+            maxAmount = RandomHelper.getRandomNumberBetween(1, Integer.parseInt(amount.replace("r", "")));
 
         } else {
 
@@ -25,9 +26,9 @@ public class Utils {
         switch (function) {
 
             case "+-":
-                if (RandomHandler.getRandomChance(50)) {
+                if (RandomHelper.getRandomChance(50)) {
 
-                    newLevel = Math.min(GCES.maxPokemonLevel, maxAmount + maxLevel);
+                    newLevel = Math.min(PixelmonConfigProxy.getGeneral().getMaxLevel(), maxAmount + maxLevel);
 
                 } else {
 
@@ -47,7 +48,7 @@ public class Utils {
                 break;
 
             case "+":
-                newLevel = Math.min(GCES.maxPokemonLevel, maxAmount + maxLevel);
+                newLevel = Math.min(PixelmonConfigProxy.getGeneral().getMaxLevel(), maxAmount + maxLevel);
                 break;
 
             default:

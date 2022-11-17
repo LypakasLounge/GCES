@@ -6,200 +6,104 @@ import com.lypaka.gces.Modules.CatchingModule;
 import com.lypaka.gces.Modules.Difficulty;
 import com.lypaka.gces.Modules.LevelingModule;
 import com.lypaka.lypakautils.FancyText;
-import com.lypaka.lypakautils.JoinListener;
 import com.lypaka.lypakautils.PermissionHandler;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.command.arguments.EntityArgument;
+import net.minecraft.entity.player.ServerPlayerEntity;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-public class LevelUpCommand extends CommandBase {
+public class LevelUpCommand {
 
-    @Override
-    public String getName() {
+    public LevelUpCommand (CommandDispatcher<CommandSource> dispatcher) {
 
-        return "levelup";
+        dispatcher.register(
+                Commands.literal("gces")
+                        .then(
+                                Commands.argument("player", EntityArgument.player())
+                                        .then(
+                                                Commands.argument("module", StringArgumentType.word())
+                                                        .executes(c -> {
 
-    }
+                                                            if (c.getSource().getEntity() instanceof ServerPlayerEntity) {
 
-    @Override
-    public List<String> getAliases() {
+                                                                ServerPlayerEntity player = (ServerPlayerEntity) c.getSource().getEntity();
+                                                                if (!PermissionHandler.hasPermission(player, "gces.command.admin")) {
 
-        List<String> a = new ArrayList<>();
-        a.add("lvlup");
-        return a;
+                                                                    player.sendMessage(FancyText.getFormattedText("&cYou don't have permission to use this command!"), player.getUniqueID());
+                                                                    return 0;
 
-    }
+                                                                }
 
-    @Override
-    public String getUsage (ICommandSender sender) {
+                                                            }
 
-        return "/gces lvlup <player> [<module>]";
+                                                            ServerPlayerEntity target = EntityArgument.getPlayer(c, "player");
+                                                            String module = StringArgumentType.getString(c, "module");
+                                                            String diff = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString()).get("Difficulty");
+                                                            if (diff.equalsIgnoreCase("none")) {
 
-    }
+                                                                c.getSource().sendErrorMessage(FancyText.getFormattedText("&eTarget player does not have a difficulty!"));
+                                                                return 0;
 
-    @Override
-    public void execute (MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+                                                            }
 
-        if (sender instanceof EntityPlayerMP) {
+                                                            Difficulty difficulty = GCES.difficultyMap.get(diff);
+                                                            int level;
+                                                            int nextLevel;
+                                                            if (module.equalsIgnoreCase("catching") || module.equalsIgnoreCase("catch")) {
 
-            EntityPlayerMP player = (EntityPlayerMP) sender;
-            if (!PermissionHandler.hasPermission(player, "gces.command.admin")) {
+                                                                CatchingModule catchingModule = difficulty.getCatchingModule();
+                                                                Map<String, String> map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
+                                                                level = Integer.parseInt(map.get("Catching"));
+                                                                nextLevel = level + 1;
+                                                                int maxLevel = catchingModule.getTierMap().size();
+                                                                if (nextLevel > maxLevel) {
 
-                player.sendMessage(FancyText.getFormattedText("&cYou don't have permission to use this command!"));
-                return;
+                                                                    c.getSource().sendErrorMessage(FancyText.getFormattedText("&eLevel cannot be higher than max level!"));
+                                                                    return 0;
 
-            }
+                                                                }
 
-        }
+                                                                map.put("Catching", String.valueOf(nextLevel));
+                                                                ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
+                                                                target.sendMessage(FancyText.getFormattedText("&aYour tier in catching has increased to " + nextLevel + "!"), target.getUniqueID());
+                                                                c.getSource().sendFeedback(FancyText.getFormattedText("&eSuccessfully set " + target.getName() + "'s catching tier to " + nextLevel + "."), true);
 
-        String playerArg = args[1];
-        EntityPlayerMP target = null;
+                                                            } else if (module.equalsIgnoreCase("leveling") || module.equalsIgnoreCase("level")) {
 
-        if (args.length > 2) {
+                                                                LevelingModule levelingModule = difficulty.getLevelingModule();
+                                                                Map<String, String> map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
+                                                                level = Integer.parseInt(map.get("Leveling"));
+                                                                nextLevel = level + 1;
+                                                                int maxLevel = levelingModule.getTierMap().size();
+                                                                if (nextLevel > maxLevel) {
 
-            String module = args[2];
-            for (Map.Entry<UUID, EntityPlayerMP> entry : JoinListener.playerMap.entrySet()) {
+                                                                    c.getSource().sendErrorMessage(FancyText.getFormattedText("&eLevel cannot be higher than max level!"));
+                                                                    return 0;
 
-                if (entry.getValue().getName().equalsIgnoreCase(playerArg)) {
+                                                                }
 
-                    target = entry.getValue();
-                    break;
+                                                                map.put("Leveling", String.valueOf(nextLevel));
+                                                                ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
+                                                                target.sendMessage(FancyText.getFormattedText("&aYour tier in leveling has increased to " + nextLevel + "!"), target.getUniqueID());
+                                                                c.getSource().sendFeedback(FancyText.getFormattedText("&eSuccessfully set " + target.getName() + "'s leveling tier to " + nextLevel + "."), true);
 
-                }
+                                                            } else {
 
-            }
+                                                                c.getSource().sendErrorMessage(FancyText.getFormattedText("&cInvalid module!"));
+                                                                return 0;
 
-            if (target == null) {
+                                                            }
 
-                sender.sendMessage(FancyText.getFormattedText("&cInvalid player name!"));
-                return;
+                                                            return 1;
 
-            }
-
-            String diff = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString()).get("Difficulty");
-            if (diff.equalsIgnoreCase("none")) {
-
-                sender.sendMessage(FancyText.getFormattedText("&eTarget player does not have a difficulty!"));
-                return;
-
-            }
-
-            Difficulty difficulty = GCES.difficultyMap.get(diff);
-            int level;
-            int nextLevel;
-            if (module.equalsIgnoreCase("catching") || module.equalsIgnoreCase("catch")) {
-
-                CatchingModule catchingModule = difficulty.getCatchingModule();
-                Map<String, String> map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
-                level = Integer.parseInt(map.get("Catching"));
-                nextLevel = level + 1;
-                int maxLevel = catchingModule.getTierMap().size();
-                if (nextLevel > maxLevel) {
-
-                    sender.sendMessage(FancyText.getFormattedText("&eLevel cannot be higher than max level!"));
-                    return;
-
-                }
-
-                map.put("Catching", String.valueOf(nextLevel));
-                ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
-                target.sendMessage(FancyText.getFormattedText("&aYour tier in catching has increased to " + nextLevel + "!"));
-                sender.sendMessage(FancyText.getFormattedText("&eSuccessfully set " + target.getName() + "'s catching tier to " + nextLevel + "."));
-
-            } else if (module.equalsIgnoreCase("leveling") || module.equalsIgnoreCase("level")) {
-
-                LevelingModule levelingModule = difficulty.getLevelingModule();
-                Map<String, String> map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
-                level = Integer.parseInt(map.get("Leveling"));
-                nextLevel = level + 1;
-                int maxLevel = levelingModule.getTierMap().size();
-                if (nextLevel > maxLevel) {
-
-                    sender.sendMessage(FancyText.getFormattedText("&eLevel cannot be higher than max level!"));
-                    return;
-
-                }
-
-                map.put("Leveling", String.valueOf(nextLevel));
-                ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
-                target.sendMessage(FancyText.getFormattedText("&aYour tier in leveling has increased to " + nextLevel + "!"));
-                sender.sendMessage(FancyText.getFormattedText("&eSuccessfully set " + target.getName() + "'s leveling tier to " + nextLevel + "."));
-
-            }
-
-        } else {
-
-            for (Map.Entry<UUID, EntityPlayerMP> entry : JoinListener.playerMap.entrySet()) {
-
-                if (entry.getValue().getName().equalsIgnoreCase(playerArg)) {
-
-                    target = entry.getValue();
-                    break;
-
-                }
-
-            }
-
-            if (target == null) {
-
-                sender.sendMessage(FancyText.getFormattedText("&cInvalid player name!"));
-                return;
-
-            }
-
-            String diff = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString()).get("Difficulty");
-            if (diff.equalsIgnoreCase("none")) {
-
-                sender.sendMessage(FancyText.getFormattedText("&eTarget player does not have a difficulty!"));
-                return;
-
-            }
-
-            Difficulty difficulty = GCES.difficultyMap.get(diff);
-            int level;
-            int nextLevel;
-            CatchingModule catchingModule = difficulty.getCatchingModule();
-            Map<String, String> map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
-            level = Integer.parseInt(map.get("Catching"));
-            nextLevel = level + 1;
-            int maxLevel = catchingModule.getTierMap().size();
-            if (nextLevel > maxLevel) {
-
-                sender.sendMessage(FancyText.getFormattedText("&eLevel cannot be higher than max level!"));
-                return;
-
-            }
-
-            map.put("Catching", String.valueOf(nextLevel));
-            ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
-            target.sendMessage(FancyText.getFormattedText("&aYour tier in catching has increased to " + nextLevel + "!"));
-            sender.sendMessage(FancyText.getFormattedText("&eSuccessfully set " + target.getName() + "'s catching tier to " + nextLevel + "."));
-
-            LevelingModule levelingModule = difficulty.getLevelingModule();
-            map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
-            level = Integer.parseInt(map.get("Leveling"));
-            nextLevel = level + 1;
-            maxLevel = levelingModule.getTierMap().size();
-            if (nextLevel > maxLevel) {
-
-                sender.sendMessage(FancyText.getFormattedText("&eLevel cannot be higher than max level!"));
-                return;
-
-            }
-
-            map.put("Leveling", String.valueOf(nextLevel));
-            ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
-            target.sendMessage(FancyText.getFormattedText("&aYour tier in leveling has increased to " + nextLevel + "!"));
-            sender.sendMessage(FancyText.getFormattedText("&eSuccessfully set " + target.getName() + "'s leveling tier to " + nextLevel + "."));
-
-        }
+                                                        })
+                                        )
+                        )
+        );
 
     }
 

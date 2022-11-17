@@ -5,14 +5,12 @@ public class BattleModule {
     private final boolean checkBattles;
     private final String dynamaxPermission;
     private final String megaPermission;
-    private final String zMovePermission;
 
-    public BattleModule (boolean checkBattles, String dynamaxPermission, String megaPermission, String zMovePermission) {
+    public BattleModule (boolean checkBattles, String dynamaxPermission, String megaPermission) {
 
         this.checkBattles = checkBattles;
         this.dynamaxPermission = dynamaxPermission;
         this.megaPermission = megaPermission;
-        this.zMovePermission = zMovePermission;
 
     }
 
@@ -31,12 +29,6 @@ public class BattleModule {
     public String getMegaPermission() {
 
         return this.megaPermission;
-
-    }
-
-    public String getZMovePermission() {
-
-        return this.zMovePermission;
 
     }
 

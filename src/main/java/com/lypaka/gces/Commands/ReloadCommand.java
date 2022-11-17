@@ -4,61 +4,56 @@ import com.lypaka.gces.Config.ConfigGetters;
 import com.lypaka.gces.GCES;
 import com.lypaka.lypakautils.FancyText;
 import com.lypaka.lypakautils.PermissionHandler;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
+import com.mojang.brigadier.CommandDispatcher;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class ReloadCommand extends CommandBase {
+public class ReloadCommand {
 
-    @Override
-    public String getName() {
+    public ReloadCommand (CommandDispatcher<CommandSource> dispatcher) {
 
-        return "reload";
+        dispatcher.register(
+                Commands.literal("gces")
+                        .then(
+                                Commands.literal("reload")
+                                        .executes(c -> {
 
-    }
+                                            if (c.getSource().getEntity() instanceof ServerPlayerEntity) {
 
-    @Override
-    public String getUsage (ICommandSender sender) {
+                                                ServerPlayerEntity player = (ServerPlayerEntity) c.getSource().getEntity();
+                                                if (!PermissionHandler.hasPermission(player, "gces.command.admin")) {
 
-        return "/gces reload";
+                                                    player.sendMessage(FancyText.getFormattedText("&cYou don't have permission to use this command!"), player.getUniqueID());
+                                                    return 0;
 
-    }
+                                                }
 
-    @Override
-    public void execute (MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+                                            }
 
-        if (sender instanceof EntityPlayerMP) {
+                                            try {
 
-            EntityPlayerMP player = (EntityPlayerMP) sender;
-            if (!PermissionHandler.hasPermission(player, "gces.command.admin")) {
+                                                Map<String, Map<String, String>> playerAccountsMap = ConfigGetters.playerAccountsMap; // a very stupid fix for a very stupid problem
+                                                GCES.configManager.load();
+                                                ConfigGetters.load();
+                                                ConfigGetters.playerAccountsMap = playerAccountsMap;
+                                                GCES.loadDifficulties();
+                                                c.getSource().sendFeedback(FancyText.getFormattedText("&aSuccessfully reloaded GCES configuration!"), true);
 
-                player.sendMessage(FancyText.getFormattedText("&cYou don't have permission to use this command!"));
-                return;
+                                            } catch (ObjectMappingException | IOException e) {
 
-            }
+                                                e.printStackTrace();
 
-        }
+                                            }
+                                            return 1;
 
-        try {
-
-            Map<String, Map<String, String>> playerAccountsMap = ConfigGetters.playerAccountsMap; // a very stupid fix for a very stupid problem
-            GCES.configManager.load();
-            ConfigGetters.load();
-            ConfigGetters.playerAccountsMap = playerAccountsMap;
-            GCES.loadDifficulties();
-            sender.sendMessage(FancyText.getFormattedText("&aSuccessfully reloaded GCES configuration!"));
-
-        } catch (ObjectMappingException | IOException e) {
-
-            e.printStackTrace();
-
-        }
+                                        })
+                        )
+        );
 
     }
 

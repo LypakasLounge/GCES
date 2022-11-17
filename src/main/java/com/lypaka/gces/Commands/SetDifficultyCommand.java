@@ -2,92 +2,76 @@ package com.lypaka.gces.Commands;
 
 import com.lypaka.gces.Config.ConfigGetters;
 import com.lypaka.lypakautils.FancyText;
-import com.lypaka.lypakautils.JoinListener;
 import com.lypaka.lypakautils.PermissionHandler;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.command.arguments.EntityArgument;
+import net.minecraft.entity.player.ServerPlayerEntity;
 
 import java.util.Map;
-import java.util.UUID;
 
-public class SetDifficultyCommand extends CommandBase {
+public class SetDifficultyCommand {
 
-    @Override
-    public String getName() {
+    public SetDifficultyCommand (CommandDispatcher<CommandSource> dispatcher) {
 
-        return "setdiff";
+        dispatcher.register(
+                Commands.literal("gces")
+                        .then(
+                                Commands.literal("setdiff")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .then(
+                                                                Commands.argument("difficulty", StringArgumentType.word())
+                                                                        .executes(c -> {
 
-    }
+                                                                            if (c.getSource().getEntity() instanceof ServerPlayerEntity) {
 
-    @Override
-    public String getUsage (ICommandSender sender) {
+                                                                                ServerPlayerEntity player = (ServerPlayerEntity) c.getSource().getEntity();
+                                                                                if (!PermissionHandler.hasPermission(player, "gces.command.admin")) {
 
-        return "/gces setdiff <player> <difficulty>";
+                                                                                    player.sendMessage(FancyText.getFormattedText("&cYou don't have permission to use this command!"), player.getUniqueID());
+                                                                                    return 0;
 
-    }
+                                                                                }
 
-    @Override
-    public void execute (MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+                                                                            }
 
-        if (sender instanceof EntityPlayerMP) {
+                                                                            ServerPlayerEntity target = EntityArgument.getPlayer(c, "player");
+                                                                            String diff = StringArgumentType.getString(c, "difficulty");
+                                                                            String difficulty = null;
 
-            EntityPlayerMP player = (EntityPlayerMP) sender;
-            if (!PermissionHandler.hasPermission(player, "gces.command.admin")) {
+                                                                            for (String d : ConfigGetters.difficulties) {
 
-                player.sendMessage(FancyText.getFormattedText("&cYou don't have permission to use this command!"));
-                return;
+                                                                                if (d.equalsIgnoreCase(diff)) {
 
-            }
+                                                                                    difficulty = d;
+                                                                                    break;
 
-        }
+                                                                                }
 
-        if (args.length < 3) {
+                                                                            }
 
-            sender.sendMessage(FancyText.getFormattedText(getUsage(sender)));
-            return;
+                                                                            if (difficulty == null) {
 
-        }
+                                                                                c.getSource().sendErrorMessage(FancyText.getFormattedText("&cInvalid difficulty!"));
+                                                                                return 0;
 
-        String setDiff = args[0];
-        String playerName = args[1];
-        String difficulty = args[2];
-        EntityPlayerMP target = null;
-        for (Map.Entry<UUID, EntityPlayerMP> entry : JoinListener.playerMap.entrySet()) {
+                                                                            }
 
-            if (entry.getValue().getName().equalsIgnoreCase(playerName)) {
+                                                                            Map<String, String> map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
+                                                                            map.put("Difficulty", difficulty);
+                                                                            ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
+                                                                            target.sendMessage(FancyText.getFormattedText("&eYour difficulty has been set to: " + difficulty), target.getUniqueID());
+                                                                            c.getSource().sendFeedback(FancyText.getFormattedText("&aSuccessfully set " + target.getName() + "'s difficulty to " + difficulty + "."), true);
+                                                                            return 1;
 
-                target = entry.getValue();
-                break;
-
-            }
-
-        }
-        if (target == null) {
-
-            sender.sendMessage(FancyText.getFormattedText("&eInvalid player name!"));
-            return;
-
-        }
-
-        for (String d : ConfigGetters.difficulties) {
-
-            if (d.equalsIgnoreCase(difficulty)) {
-
-                difficulty = d;
-                break;
-
-            }
-
-        }
-
-        Map<String, String> map = ConfigGetters.playerAccountsMap.get(target.getUniqueID().toString());
-        map.put("Difficulty", difficulty);
-        ConfigGetters.playerAccountsMap.put(target.getUniqueID().toString(), map);
-        target.sendMessage(FancyText.getFormattedText("&eYour difficulty has been set to: " + difficulty));
-        sender.sendMessage(FancyText.getFormattedText("&aSuccessfully set " + target.getName() + "'s difficulty to " + difficulty + "."));
+                                                                        })
+                                                        )
+                                        )
+                        )
+        );
 
     }
 

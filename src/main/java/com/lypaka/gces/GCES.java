@@ -1,22 +1,15 @@
 package com.lypaka.gces;
 
 import com.google.common.reflect.TypeToken;
-import com.lypaka.gces.Commands.GCESCommand;
 import com.lypaka.gces.Config.ConfigGetters;
 import com.lypaka.gces.Config.ConfigUpdater;
-import com.lypaka.gces.Listeners.EventRegistry;
-import com.lypaka.gces.Listeners.LoginListener;
-import com.lypaka.gces.Modules.*;
+import com.lypaka.gces.Modules.BattleModule;
+import com.lypaka.gces.Modules.CatchingModule;
+import com.lypaka.gces.Modules.Difficulty;
+import com.lypaka.gces.Modules.LevelingModule;
 import com.lypaka.lypakautils.ConfigurationLoaders.BasicConfigManager;
 import com.lypaka.lypakautils.ConfigurationLoaders.ConfigUtils;
-import com.lypaka.lypakautils.PixelmonHandlers.PixelmonVersionDetector;
-import com.pixelmongenerations.core.config.PixelmonConfig;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,25 +20,18 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-@Mod(
-        modid = GCES.MOD_ID,
-        name = GCES.MOD_NAME,
-        version = GCES.VERSION,
-        acceptableRemoteVersions = "*",
-        dependencies = "required-after:lypakautils@[0.0.5,);required-after:pixelmon"
-)
+// The value here should match an entry in the META-INF/mods.toml file
+@Mod("gces")
 public class GCES {
 
     public static final String MOD_ID = "gces";
     public static final String MOD_NAME = "GCES";
-    public static final String VERSION = "10.5.0";
+    public static final String VERSION = "10.1.0";
     public static Logger logger = LogManager.getLogger(MOD_NAME);
     public static BasicConfigManager configManager;
     public static Map<String, Difficulty> difficultyMap = new HashMap<>();
-    public static int maxPokemonLevel;
 
-    @Mod.EventHandler
-    public void preInit (FMLPreInitializationEvent event) throws IOException, ObjectMappingException {
+    public GCES() throws IOException, ObjectMappingException {
 
         Path dir = ConfigUtils.checkDir(Paths.get("./config/gces"));
         String[] mainFiles = new String[]{"gces.conf", "player-accounts.conf"};
@@ -54,41 +40,6 @@ public class GCES {
         ConfigGetters.load();
         loadDifficulties();
         ConfigUpdater.updateConfig();
-
-    }
-
-    @Mod.EventHandler
-    public void onServerStarting (FMLServerStartingEvent event) {
-
-        event.registerServerCommand(new GCESCommand());
-
-        MinecraftForge.EVENT_BUS.register(new LoginListener());
-        if (PixelmonVersionDetector.VERSION.contains("Generations")) {
-
-            maxPokemonLevel = PixelmonConfig.maxLevel;
-            EventRegistry.registerGenerationsEvents();
-
-        } else {
-
-            maxPokemonLevel = com.pixelmonmod.pixelmon.config.PixelmonConfig.maxLevel;
-            EventRegistry.registerReforgedEvents();
-
-        }
-
-    }
-
-    @Mod.EventHandler
-    public void onServerStarted (FMLServerStartedEvent event) {
-
-        SaveTask.startAutoSave();
-
-    }
-
-    @Mod.EventHandler
-    public void onShuttingDown (FMLServerStoppingEvent event) {
-
-        configManager.getConfigNode(1, "Accounts").setValue(ConfigGetters.playerAccountsMap);
-        configManager.save();
 
     }
 
@@ -119,8 +70,7 @@ public class GCES {
             boolean checkBattles = bcm.getConfigNode(2, "Check-Battles").getBoolean();
             String dynamaxPermission = bcm.getConfigNode(2, "Permissions", "Dynamax-Permission").getString();
             String megaPermission = bcm.getConfigNode(2, "Permissions", "Mega-Permission").getString();
-            String zMovePermission = bcm.getConfigNode(2, "Permissions", "Z-Move-Permission").getString();
-            BattleModule battleModule = new BattleModule(checkBattles, dynamaxPermission, megaPermission, zMovePermission);
+            BattleModule battleModule = new BattleModule(checkBattles, dynamaxPermission, megaPermission);
 
             Difficulty difficulty = new Difficulty(diff, bcm, catchingModule, levelingModule, battleModule);
             difficulty.add();
