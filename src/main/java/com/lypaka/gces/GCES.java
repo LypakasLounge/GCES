@@ -26,7 +26,7 @@ public class GCES {
 
     public static final String MOD_ID = "gces";
     public static final String MOD_NAME = "GCES";
-    public static final String VERSION = "10.5.0";
+    public static final String VERSION = "10.5.1";
     public static Logger logger = LogManager.getLogger(MOD_NAME);
     public static BasicConfigManager configManager;
     public static Map<String, Difficulty> difficultyMap = new HashMap<>();

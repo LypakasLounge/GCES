@@ -17,13 +17,13 @@ public class CaptureListener {
     @SubscribeEvent
     public void onCapture (CaptureEvent.StartCapture event) {
 
-        ServerPlayerEntity player = event.player;
+        ServerPlayerEntity player = event.getPlayer();
         String diff = ConfigGetters.playerAccountsMap.get(player.getUniqueID().toString()).get("Difficulty");
         if (diff.equalsIgnoreCase("none")) return;
         Difficulty difficulty = GCES.difficultyMap.get(diff);
         CatchingModule catchingModule = difficulty.getCatchingModule();
         PixelmonEntity pokemon = event.getPokemon();
-        ItemStack ball = event.pokeball.getBallType().getBallItem().getDefaultInstance();
+        ItemStack ball = event.getPokeBall().getBallType().getBallItem();
         ball.setCount(1);
 
         if (pokemon.getPokemon().isShiny()) {
